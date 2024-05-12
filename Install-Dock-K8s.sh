@@ -1,18 +1,15 @@
 #!/bin/bash
 # Changement local
 echo "###############################"
-echo "[Task 1] Installation des prerequis Docker"
-echo "-------------------------------"
+echo "Installation des prerequis Docker"
 sudo yum install yum-utils device-mapper-persistent-data lvm2 -y 
 
 echo "###############################"
-echo "[Task 2] Configuration du repository Docker"
-echo "-------------------------------"
+echo "Configuration du repository Docker"
 sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo 
 
 echo "###############################"
-echo "[Task pré-3] Test si OS==Rocky"
-echo "-------------------------------"
+echo "Test si OS==Rocky"
 if [ -f /etc/os-release ] && grep -q 'Rocky Linux' /etc/os-release; then
     sudo dnf remove -y podman containers-common.x86_64
 else
@@ -21,15 +18,12 @@ fi
 
 
 echo "###############################"
-echo "[Task 3] installation Docker runtime"
-echo "-------------------------------"
+echo "Installation Docker runtime"
 sudo yum install docker-ce -y
 
 echo "###############################"
-echo "[Task 4] personalisation cgroupdriver=systemd"
-echo "-------------------------------"
+echo "Personalisation cgroupdriver=systemd"
 sudo mkdir /etc/docker
-
 # Set up the Docker daemon
 sudo cat > /etc/docker/daemon.json <<EOF
 {
@@ -44,13 +38,12 @@ sudo cat > /etc/docker/daemon.json <<EOF
 EOF
 
 echo "###############################"
-echo "[Task 5] Start & Enable Docker"
-echo "###############################"
+echo "Start & Enable Docker"
 sudo systemctl start docker
 sudo systemctl enable docker
 
-
-echo"K8s ##############"
+echo "###############################"
+echo"Installation Repo + yum install K8s"
 sudo setenforce 0
 sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
