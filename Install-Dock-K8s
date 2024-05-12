@@ -1,0 +1,66 @@
+#!/bin/bash
+
+echo "###############################"
+echo "[Task 1] Installation des prerequis Docker"
+echo "-------------------------------"
+sudo yum install yum-utils device-mapper-persistent-data lvm2 -y 
+
+echo "###############################"
+echo "[Task 2] Configuration du repository Docker"
+echo "-------------------------------"
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo 
+
+echo "###############################"
+echo "[Task pré-3] Test si OS==Rocky"
+echo "-------------------------------"
+if [ -f /etc/os-release ] && grep -q 'Rocky Linux' /etc/os-release; then
+    sudo dnf remove -y podman containers-common.x86_64
+else
+    echo "Ce système d'exploitation n'est pas Rocky Linux."
+fi
+
+
+echo "###############################"
+echo "[Task 3] installation Docker runtime"
+echo "-------------------------------"
+sudo yum install docker-ce -y
+
+echo "###############################"
+echo "[Task 4] personalisation cgroupdriver=systemd"
+echo "-------------------------------"
+sudo mkdir /etc/docker
+
+# Set up the Docker daemon
+sudo cat > /etc/docker/daemon.json <<EOF
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+  
+}
+EOF
+
+echo "###############################"
+echo "[Task 5] Start & Enable Docker"
+echo "###############################"
+sudo systemctl start docker
+sudo systemctl enable docker
+
+
+echo"K8s ##############"
+sudo setenforce 0
+sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key
+exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
+EOF
+
+sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
